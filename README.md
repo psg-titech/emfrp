@@ -2,7 +2,7 @@
 
 Pure Functional Programming with your microcomputer.
 
-# Requirement
+## Requirement
 
 * Ruby2.0 or later (and it's Gem client)
 
@@ -12,12 +12,12 @@ You can get executables via RubyGems.
 $ gem install emfrp
 ```
 
-# Command-line-interpreter (REPL)
+## Command-line-interpreter (REPL)
 ```sh
 $ emfrpi
 ```
 
-# Compiler
+## Compiler
 ```sh
 $ emfrp <src-file>
 ```
