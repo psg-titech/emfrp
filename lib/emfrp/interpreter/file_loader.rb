@@ -32,7 +32,7 @@ module Emfrp
 
     def load(path)
       path_str = path.is_a?(Array) ? path.join("/") : path
-      if path =~ /^\/.*?/ && File.exist?(path)
+      if path.is_a?(String) && path.start_with?("/") && File.exist?(path)
         src_str = File.open(path, 'r'){|f| f.read}
         return @loaded_hash[path] = [src_str, path]
       end

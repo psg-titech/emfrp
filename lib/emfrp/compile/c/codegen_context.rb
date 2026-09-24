@@ -201,7 +201,7 @@ module Emfrp
       end
 
       def to_s(t=0)
-        res = ""
+        res = String.new
         res << T[t] + @head_str + "\n"
         @elements.each do |e|
           case e
