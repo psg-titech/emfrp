@@ -106,7 +106,13 @@ module Emfrp
             "#{pn.node_var_name(ct)}[#{x[:last] ? "last_side" : "current_side"}]"
           end
           output_arg = "&#{node.node_var_name(ct)}[current_side]"
-          stmts << "#{node.node_func_name(ct)}(#{[*args, output_arg].join(", ")});"
+          call = "#{node.node_func_name(ct)}(#{[*args, output_arg].join(", ")})"
+          if node.skippable?
+            # a skipped node keeps its last value
+            stmts << "if (!#{call}) #{node.node_var_name(ct)}[current_side] = #{node.node_var_name(ct)}[last_side];"
+          else
+            stmts << "#{call};"
+          end
           t = ct.tdef(node)
           if t.is_a?(TypeDef) && !t.enum?(ct)
             mark_val = "Counter + #{ar.life_point(node)}"
@@ -189,7 +195,10 @@ module Emfrp
       return if enum?(ct)
       params = [[ref_name(ct), "x"], ["int", "mark"]]
       ct.define_func("void", marker_func_name(ct), params) do |x|
-        x << "if (mark > x->mark) { x->mark = mark; }" unless self[:static]
+        unless self[:static]
+          x << "if (x == 0) return;"
+          x << "if (mark > x->mark) { x->mark = mark; }"
+        end
         accessor = self[:static] ? "." : "->"
         cases = []
         self[:tvalues].each_with_index do |tvalue, i|
@@ -288,6 +297,12 @@ module Emfrp
       ct.define_func(ct.tref(self), init_func_name(ct), []) do |x|
         x << "return #{self[:init_exp].codegen(ct, x)};"
       end
+    end
+
+    def skippable?
+      res = false
+      self[:exp].traverse_all_syntax{|s| res = true if s.is_a?(SkipExp)}
+      return res
     end
 
     def node_var_gen(ct)

@@ -39,24 +39,27 @@ module Emfrp
     end
 
     def compile_default(gen_cpp = false, gen_main = true)
+      unless @top[:module_name]
+        puts "Error: material file cannot be compiled"
+        return :compile_material_error
+      end
       filename = @top[:module_name][:desc]
       c_output_file = filename + (gen_cpp ? ".cpp" : ".c")
       h_output_file = filename + ".h"
       main_output_file = filename + "Main" + ".c"
-      File.open(c_output_file, 'w') do |c_file|
-        File.open(h_output_file, 'w') do |h_file|
-          main_output_file += ".gen" if File.exist?(main_output_file)
-          if gen_main
-            File.open(main_output_file, 'w') do |main_file|
-              compile(c_file, h_file, main_file, filename)
-            end
-          else
-            require "stringio"
-            compile(c_file, h_file, StringIO.new, filename)
-          end
-          return nil
-        end
+      # generate all code first so that no file is left half-written on errors
+      c_output, h_output, main_output = StringIO.new, StringIO.new, StringIO.new
+      compile(c_output, h_output, main_output, filename)
+      File.write(c_output_file, c_output.string)
+      File.write(h_output_file, h_output.string)
+      if gen_main
+        main_output_file += ".gen" if File.exist?(main_output_file)
+        File.write(main_output_file, main_output.string)
       end
+      return nil
+    rescue CompileError => err
+      err.print_error(@output_io, @file_loader)
+      return err.code
     rescue SystemCallError => err
       puts err.inspect
       return :file_write_error

@@ -1,0 +1,17 @@
+module Skip
+in a : Int
+out x : Int, y : Int, z : Int
+use Std
+
+type Wrap = Wrap(Int)
+
+# a skipped node keeps its last value
+node x = a of 0 -> skip, v -> v
+
+# a skipped node of a boxed type keeps its last value alive
+node b = (Wrap(a), Wrap(a)) of (Wrap(i), Wrap(j)) -> i + j
+node w = b of 0 -> skip, v -> Wrap(v)
+node y = w of Wrap(v) -> v
+
+# skip as a whole node expression
+node init[7] z = skip

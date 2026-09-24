@@ -19,6 +19,13 @@ module Emfrp
     end
   end
 
+  class SkipExp
+    def codegen(ct, stmts)
+      stmts << "return 0;"
+      "0"
+    end
+  end
+
   class ParenthExp
     def codegen(ct, stmts)
       self[:exp].codegen(ct, stmts)

@@ -35,7 +35,8 @@ module Emfrp
     end
 
     def node_loop_requirement(max_amount, init_nodes, datas)
-      lrefs = init_nodes
+      # last values retained at the beginning of an iteration
+      lrefs = init_nodes + @sorted_nodes.select{|n| n.skippable? && !n[:init_exp]}
       crefs = []
       @sorted_nodes.each_with_index do |n, i|
         max_amount |= type_alloc_sum(datas + lrefs + crefs) & exp_alloc(n[:exp])
@@ -57,7 +58,13 @@ module Emfrp
           res = i
         end
       end
+      # a skippable node refers its own last value
+      res = [res, position(node)].max if node.is_a?(NodeDef) && node.skippable?
       return res
+    end
+
+    def position(node)
+      @sorted_nodes.index{|x| x.equal?(node)}
     end
 
     def ref_pos_current(node)
@@ -80,6 +87,8 @@ module Emfrp
       res = []
       # outputs must survive until Output() is called
       res << distance_to_end if output?(node)
+      # a skippable node refers its own last value
+      res << distance_to_end + self_position if node.skippable?
       @sorted_nodes.each_with_index do |x, i|
         x[:params].each do |param|
           if param[:name] == node[:name]
