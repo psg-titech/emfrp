@@ -138,8 +138,7 @@ module Emfrp
     end
 
     def uniq_id_gen
-      @uniq_ids ||= (0..1000).to_a
-      @uniq_ids.shift
+      @uniq_id = (@uniq_id || -1) + 1
     end
 
     def define_global_var(type_str, name_str, initial_value_str=nil)

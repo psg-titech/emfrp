@@ -7,10 +7,13 @@ module Emfrp
           @a, @b = a, b
         end
       end
-      NameCounter = (0..10000).to_a
       attr_reader :typename, :typeargs
       attr_accessor :name_id, :original_typevar_name, :union
 
+
+      def self.next_name_id
+        @next_name_id = (@next_name_id || -1) + 1
+      end
 
       def self.from_type(type, tbl={})
         case type
@@ -39,7 +42,7 @@ module Emfrp
           @typeargs = args[1]
         elsif args.length == 0
           @union = [self]
-          @name_id = NameCounter.shift
+          @name_id = UnionType.next_name_id
           @original_name_id = @name_id
         else
           raise "Wrong number of arguments (#{args.length} for 0, 2)"

@@ -4,6 +4,7 @@ require 'emfrp/compile/c/syntax_exp_codegen'
 module Emfrp
   class Top
     def codegen(ct, ar)
+      max_memory = ar.requirement()
       # static types are embedded by value, so they must be defined before the types containing them
       defined_structs = {}.compare_by_identity
       define_struct = proc do |t|
@@ -19,7 +20,10 @@ module Emfrp
       end
       self[:dict][:itype_space].each do |k, v|
         define_struct.call(v.get)
-        v.get.constructor_gen(ct)
+        # constructors of a type which is never allocated would refer to a missing memory pool
+        if v.get[:static] || max_memory.h.has_key?(Link.new(v.get))
+          v.get.constructor_gen(ct)
+        end
         v.get.marker_gen(ct)
       end
       # datas are initialized first (in dependency order) since inputs and nodes may refer them
@@ -53,13 +57,12 @@ module Emfrp
       self[:dict][:used_pfuncs].each do |v|
         v.get.codegen(ct)
       end
-      memory_gen(ct, ar)
+      memory_gen(ct, max_memory)
       main_gen(ct, ar)
       io_proto_gen(ct)
     end
 
-    def memory_gen(ct, ar)
-      max_memory = ar.requirement()
+    def memory_gen(ct, max_memory)
       max_memory.each do |t, i|
         t = t.get
         next if t[:static] || t.enum?(ct)

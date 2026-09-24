@@ -27,7 +27,7 @@ module Emfrp
 
     def node_init_requirement(init_nodes, max_amount, datas)
       retains = datas.clone
-      init_nodes.each do |n|
+      (@top[:inputs].select{|i| i[:init_exp]} + init_nodes).each do |n|
         max_amount |= type_alloc_sum(retains) & exp_alloc(n[:init_exp])
         retains << n
       end
@@ -136,13 +136,18 @@ module Emfrp
       end
     end
 
-    def type_alloc(type_def)
+    def type_alloc(type_def, visiting={}.compare_by_identity)
       return @type_tbl[type_def] if @type_tbl[type_def]
       case type_def
       when TypeDef
+        if visiting[type_def]
+          msg = "Recursive type `#{type_def[:name][:desc]}' is not supported by the C backend:\n"
+          raise CompileError.new(msg, :recursive_type, type_def[:name])
+        end
+        visiting[type_def] = true
         tvalue_type_max_allocs = type_def[:tvalues].map do |tval|
           param_type_max_allocs = tval[:params].map do |param|
-            type_alloc(utype_to_type_def(param[:typing]))
+            type_alloc(utype_to_type_def(param[:typing]), visiting)
           end
           param_type_max_allocs.inject(Alloc.empty, &:&)
         end

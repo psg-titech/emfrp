@@ -73,6 +73,11 @@ module Emfrp
       @top[:outputs].each do |x|
         monofy_node(@top[:dict][:node_space][x[:name][:desc]].get, visited)
       end
+      # all inputs are passed to Input() even if no node uses them
+      @top[:inputs].each do |i|
+        monofy_node(i, visited)
+        monofy_type(i[:typing], i)
+      end
       while @update
         @update = false
         @datas.each do |d|
@@ -151,20 +156,27 @@ module Emfrp
       end
     end
 
+    def monofy_type(typing, factor)
+      unless type_link = @top[:dict][:type_space][typing.typename]
+        raise CompileError.new("Type `#{typing.typename}' is undefined:\n", :undef_type, factor)
+      end
+      case type_def = type_link.get
+      when TypeDef
+        itype = IType.new(typing, type_def)
+        unless @itypes.find{|x| x == itype}
+          @itypes << itype
+          @update = true
+        end
+      when PrimTypeDef
+        # do nothing
+      else
+        raise
+      end
+    end
+
     def monofy_exp(exp, visited={})
       if exp.is_a?(Syntax) && exp.has_key?(:typing)
-        case type_def = @top[:dict][:type_space][exp[:typing].typename].get
-        when TypeDef
-          itype = IType.new(exp[:typing], type_def)
-          unless @itypes.find{|x| x == itype}
-            @itypes << itype
-            @update = true
-          end
-        when PrimTypeDef
-          # do nothing
-        else
-          raise
-        end
+        monofy_type(exp[:typing], exp)
       end
       case exp
       when FuncCall

@@ -1,0 +1,7 @@
+module UnusedInput
+in a : Int, b(fst((1, 2))) : Int, c : Maybe[Int]
+out x : Int
+use Std
+
+# inputs b and c are not used by any node
+node x = a * 2
