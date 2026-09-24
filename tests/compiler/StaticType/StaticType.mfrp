@@ -1,0 +1,18 @@
+module StaticType
+in a : Int
+out x : Int, y : Int, z : Int
+use Std
+
+type Wrap = Wrap(Int)
+
+# constructors of static types
+node s = if a > 0 then Some(a) else None
+node x = s of Some(v) -> v, None -> 0 - 1
+
+# a static type embedded in another type
+node t = (a, Some(a))
+node y = t of (p, Some(v)) -> v + p, (p, None) -> 0
+
+# a static type holding a boxed value
+node u = if a > 0 then Some(Wrap(a)) else None
+node z = u of Some(Wrap(v)) -> v * 10, None -> 0

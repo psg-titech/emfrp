@@ -4,8 +4,21 @@ require 'emfrp/compile/c/syntax_exp_codegen'
 module Emfrp
   class Top
     def codegen(ct, ar)
+      # static types are embedded by value, so they must be defined before the types containing them
+      defined_structs = {}.compare_by_identity
+      define_struct = proc do |t|
+        next if defined_structs[t]
+        defined_structs[t] = true
+        t[:tvalues].each do |tvalue|
+          tvalue[:params].each do |param|
+            pt = ct.tdef(param)
+            define_struct.call(pt) if pt.is_a?(TypeDef) && pt[:static]
+          end
+        end
+        t.struct_gen(ct)
+      end
       self[:dict][:itype_space].each do |k, v|
-        v.get.struct_gen(ct)
+        define_struct.call(v.get)
         v.get.constructor_gen(ct)
         v.get.marker_gen(ct)
       end
@@ -145,6 +158,16 @@ module Emfrp
           [ct.tref(param), "member#{i}"]
         end
         ct.define_func(ref_name(ct), tvalue.constructor_name(ct), params) do |s|
+          if self[:static]
+            # static types are passed by value and are not managed by GC
+            s << "#{ref_name(ct)} x;"
+            s << "x.tvalue_id = #{i};" if self[:tvalues].length > 1
+            tvalue[:params].each_with_index do |param, i|
+              s << "x.value.#{tvalue.struct_name(ct)}.member#{i} = member#{i};"
+            end
+            s << "return x;"
+            next
+          end
           while_stmts = []
           while_stmts << "#{memory_counter_name(ct)}++;"
           while_stmts << "#{memory_counter_name(ct)} %= #{memory_size_name(ct)};"
