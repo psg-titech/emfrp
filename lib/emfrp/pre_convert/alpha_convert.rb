@@ -46,6 +46,7 @@ module Emfrp
       when DataDef
         alpha_convert(top, syntax[:exp], tbl)
       when Case
+        alpha_convert(top, syntax[:pattern], tbl)
         vars = syntax[:pattern].find_refs()
         check_duplicate_name(vars)
         vars.each do |v|

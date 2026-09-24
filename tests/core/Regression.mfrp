@@ -1,0 +1,21 @@
+material Regression use Std
+
+# nested calls of the same function must not share arguments
+func g(a, b) = a + b
+#@ :assert-equals 6, g(1, g(2, 3))
+#@ :assert-equals 10, g(g(1, 2), g(3, 4))
+
+# compile errors report their error code
+#@ :assert-error undef => data e1 = undefinedFunc(1)
+#@ :assert-error dup => data g2 = 1 of (a, a) -> a
+
+# constructors in patterns are checked
+#@ :assert-error undef => data e2 = 1 of Foo -> 1
+#@ :assert-error arg_num => data e3 = Just(1) of Just(a, b) -> a
+
+# a dedented last line after a case group
+func h(m) =
+  m of:
+    0 -> 1
+    _ -> 2
+data lastLine = h(0)

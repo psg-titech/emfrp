@@ -25,7 +25,7 @@ module Emfrp
         if @status.rest.length > 0
           @status.rest[0].tag[:column_number]
         else
-          @src_str.each_line.last.length
+          @src_str.each_line.to_a.last.length
         end
       end
 
@@ -43,6 +43,26 @@ module Emfrp
           output_io << "\n#{line.chomp}\n"
           output_io << "#{" " * (column_number - 1)}#{"^".colorize(:green)}\n"
         end
+      end
+    end
+
+    class TabCharError < ParsingError
+      def initialize(src_str, file_name)
+        @src_str = src_str
+        @file_name = file_name
+      end
+
+      def code
+        :tab
+      end
+
+      def line_number
+        @src_str.each_line.find_index{|l| l.include?("\t")} + 1
+      end
+
+      def print_error(output_io)
+        output_io << "#{@file_name}:#{line_number}: "
+        output_io << "SyntaxError: TAB is not allowed to use in sources.\n"
       end
     end
   end

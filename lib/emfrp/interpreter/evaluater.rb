@@ -15,10 +15,11 @@ module Emfrp
               raise "Primitive Function `#{f[:name][:desc]}` is not defined for ruby"
             end
           when FuncDef
+            new_env = {}
             f[:params].map{|param| [param[:name], Link.new(f)]}.zip(exp[:args]).each do |key, arg|
-              env[key] = eval_exp(top, arg, env)
+              new_env[key] = eval_exp(top, arg, env)
             end
-            return eval_exp(top, f[:exp], env)
+            return eval_exp(top, f[:exp], new_env)
           end
         when ValueConst
           return [exp[:name][:desc].to_sym] + exp[:args].map{|e| eval_exp(top, e, env)}

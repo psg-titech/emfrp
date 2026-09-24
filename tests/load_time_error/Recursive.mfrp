@@ -1,0 +1,5 @@
+# recursive
+material Recursive use Std
+
+data x = y
+data y = x

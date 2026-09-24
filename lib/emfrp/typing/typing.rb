@@ -66,7 +66,7 @@ module Emfrp
       if s.is_a?(Syntax)
         return if s.has_key?(:typing)
         if s.has_key?(:typing_lock)
-          raise CompileError.new("`#{s[:name][:desc]}' is defined recursively:\n", s)
+          raise CompileError.new("`#{s[:name][:desc]}' is defined recursively:\n", :recursive, s)
         end
         s[:typing_lock] = true
       end

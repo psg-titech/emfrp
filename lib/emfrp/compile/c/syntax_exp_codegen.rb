@@ -37,9 +37,9 @@ module Emfrp
     end
   end
 
-  class LitaralChar
+  class LiteralChar
     def codegen(ct, stmts)
-      self[:entity][:desc]
+      self[:entity].ord.to_s
     end
   end
 

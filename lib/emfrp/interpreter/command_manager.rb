@@ -128,9 +128,9 @@ module Emfrp
             elsif name == "top"
               pp @top
             elsif name == "ifuncs"
-              pp @top[:dict][:ifuncs_space].keys
+              pp @top[:dict][:ifunc_space].keys
             elsif name == "itypes"
-              pp @top[:dict][:itypes_space].keys
+              pp @top[:dict][:itype_space].keys
             else
               puts "Error: `#{name}' is not found"
               next :target_not_found

@@ -19,7 +19,7 @@ module Emfrp
     end
 
     def self.parse_src(src_str, file_name, file_loader, file_type=module_file)
-      case res = file_type.parse_from_string(convert_case_group(src_str), file_name)
+      case res = file_type.parse_from_string(convert_case_group(src_str, file_name), file_name)
       when Fail
         raise ParsingError.new(src_str, file_name, res.status)
       when Ok
@@ -37,7 +37,7 @@ module Emfrp
     end
 
     def self.parse(src_str, file_name, parser)
-      case res = parser.parse_from_string(convert_case_group(src_str), file_name)
+      case res = parser.parse_from_string(convert_case_group(src_str, file_name), file_name)
       when Fail
         raise ParsingError.new(src_str, file_name, res.status)
       when Ok
@@ -47,8 +47,8 @@ module Emfrp
       end
     end
 
-    def self.convert_case_group(src_str)
-      raise ParsingError.new("TAB is not allowed to use in sources.") if src_str.chars.include?("\t")
+    def self.convert_case_group(src_str, file_name=nil)
+      raise TabCharError.new(src_str, file_name) if src_str.include?("\t")
       lines = src_str.each_line.to_a.map(&:chomp)
       len = lines.length
       len.times do |ln|
@@ -56,13 +56,11 @@ module Emfrp
           width = lines[ln].chars.take_while{|c| c == "\s"}.size
           ((ln+1)..(len-1)).each do |ln2|
             width2 = lines[ln2].chars.take_while{|c| c == "\s"}.size
-            if ln2 == len - 1
-              lines[ln2] << " :endcase"
-              break
-            elsif lines[ln2].strip == ""
-              next
-            elsif width2 <= width
+            if lines[ln2].strip != "" && width2 <= width
               lines[ln2 - 1] << " :endcase"
+              break
+            elsif ln2 == len - 1
+              lines[ln2] << " :endcase"
               break
             end
           end

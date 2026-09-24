@@ -6,7 +6,7 @@ module Emfrp
 
     def initialize(message, code, *factors)
       @message = message
-      @code = message
+      @code = code
       @factors = factors
     end
 

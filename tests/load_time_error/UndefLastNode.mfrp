@@ -1,0 +1,4 @@
+# undef
+module UndefLastNode in i : Int out o use Std
+
+node init[0] from[zz@last, i] o = zz@last + i

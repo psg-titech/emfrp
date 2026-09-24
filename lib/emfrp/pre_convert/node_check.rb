@@ -7,6 +7,9 @@ module Emfrp
         n[:params].each do |node_ref|
           if node_ref.is_a?(NodeRef) && node_ref[:last]
             depended_node = (top[:nodes] + top[:inputs]).select{|x| x[:name] == node_ref[:name]}.first
+            unless depended_node
+              PreConvert.err(:undef, "Undefined node `#{node_ref[:name][:desc]}` is referred with @last:\n", node_ref)
+            end
             unless depended_node[:init_exp]
               PreConvert.err(:noinit, "Node `#{node_ref[:name][:desc]}` having no init-exp is referred with @last:\n", node_ref)
             end
@@ -50,7 +53,7 @@ module Emfrp
       trace = []
       n = node
       until n[:prev] == nil || trace.include?(n)
-        ref = n[:prev][:params].find{|param| param.is_a?(NodeRef) && param[:as] == n[:name]}
+        ref = n[:prev][:params].find{|param| param.is_a?(NodeRef) && !param[:last] && param[:name] == n[:name]}
         trace << ref
         n = n[:prev]
       end

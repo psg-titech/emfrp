@@ -1,0 +1,5 @@
+# circular
+module CircularWithAlias in i : Int out o use Std
+
+node from[a as q, i] o = q + i
+node a = o

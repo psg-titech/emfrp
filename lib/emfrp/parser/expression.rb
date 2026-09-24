@@ -27,10 +27,10 @@ module Emfrp
         many1(ws),
         exp.err("if-exp", "valid then exp").name(:else),
       ).map do |x|
-        true_sym = SSymbol.new(:desc => "True")
+        true_sym = SSymbol.new(:desc => "True", :start_pos => x[:keyword][:start_pos], :end_pos => x[:keyword][:end_pos])
         true_pat = ValuePattern.new(:name => true_sym, :args => [], :ref => nil, :type => nil)
         true_case = Case.new(:pattern => true_pat, :exp => x[:then])
-        false_sym = SSymbol.new(:desc => "False")
+        false_sym = SSymbol.new(:desc => "False", :start_pos => x[:keyword][:start_pos], :end_pos => x[:keyword][:end_pos])
         false_pat = ValuePattern.new(:name => false_sym, :args => [], :ref => nil, :type => nil)
         false_case = Case.new(:pattern => false_pat, :exp => x[:else])
         MatchExp.new(:exp => x[:cond], :cases => [true_case, false_case])
