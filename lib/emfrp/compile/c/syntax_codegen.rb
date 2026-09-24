@@ -285,7 +285,7 @@ module Emfrp
 
   class NodeDef
     def func_gen(ct)
-      params = self[:params].map{|x| [ct.tref(x), ct.escape_name(x[:as][:desc])]}
+      params = self[:params].map{|x| [ct.tref(x), var_name(ct, x[:as][:desc])]}
       output_param = [ct.tref(self) + "*", "output"]
       ct.define_func("int", node_func_name(ct), params + [output_param]) do |x|
         x << "*output = #{self[:exp].codegen(ct, x)};"
@@ -325,8 +325,9 @@ module Emfrp
       "_nvar#{ct.serial(nil, self)}"
     end
 
+    # prefixed to avoid collisions with C keywords and generated names
     def var_name(ct, name)
-      ct.escape_name(name)
+      "v_" + ct.escape_name(name)
     end
   end
 
@@ -342,11 +343,11 @@ module Emfrp
     end
 
     def init_func_name(ct)
-      "init_#{self[:name][:desc]}"
+      "init_#{ct.escape_name(self[:name][:desc])}"
     end
 
     def node_var_name(ct)
-      "node_memory_#{self[:name][:desc]}"
+      "node_memory_#{ct.escape_name(self[:name][:desc])}"
     end
   end
 
@@ -369,17 +370,17 @@ module Emfrp
     end
 
     def init_func_name(ct)
-      "init_#{self[:name][:desc]}"
+      "init_data_#{ct.escape_name(self[:name][:desc])}"
     end
 
     def var_name(ct, name)
-      ct.escape_name(name)
+      "data_" + ct.escape_name(name)
     end
   end
 
   class FuncDef
     def codegen(ct)
-      params = self[:params].map{|x| [ct.tref(x), x[:name][:desc]]}
+      params = self[:params].map{|x| [ct.tref(x), var_name(ct, x[:name][:desc])]}
       ct.define_func(ct.tref(self), func_name(ct), params) do |x|
         x << "return #{self[:exp].codegen(ct, x)};"
       end
@@ -390,7 +391,7 @@ module Emfrp
     end
 
     def var_name(ct, name)
-      ct.escape_name(name)
+      "v_" + ct.escape_name(name)
     end
   end
 

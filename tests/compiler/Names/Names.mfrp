@@ -1,0 +1,13 @@
+module Names
+in a : Int
+out x : Int
+use Std
+
+# names which used to collide with C keywords or generated names
+data d = 3
+data current_side = 7
+func g(v) = v + d
+func f(int) = int + current_side
+node output = a + 1
+node init[0] d = a
+node x = output * 2 + g(d@last) + f(a)
