@@ -20,6 +20,7 @@ module Emfrp
       retains = []
       sorted_datas.each do |d|
         max_amount |= type_alloc_sum(retains) & exp_alloc(d[:exp])
+        retains << d
       end
       return max_amount
     end
@@ -43,7 +44,7 @@ module Emfrp
           i >= ref_pos_last(x)
         end
         crefs.reject! do |x|
-          ref_pos_last(x) == -1 and i >= ref_pos_current(x)
+          ref_pos_last(x) == -1 and i >= ref_pos_current(x) and !output?(x)
         end
       end
       return max_amount
@@ -69,10 +70,16 @@ module Emfrp
       return res
     end
 
+    def output?(node)
+      @top[:outputs].any?{|x| x[:name] == node[:name]}
+    end
+
     def life_point(node)
       self_position = @sorted_nodes.index{|x| x == node}
       distance_to_end = @sorted_nodes.size - self_position
       res = []
+      # outputs must survive until Output() is called
+      res << distance_to_end if output?(node)
       @sorted_nodes.each_with_index do |x, i|
         x[:params].each do |param|
           if param[:name] == node[:name]

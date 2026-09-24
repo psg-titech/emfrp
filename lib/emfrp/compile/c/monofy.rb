@@ -102,7 +102,41 @@ module Emfrp
           end
         end
       end
-      @top[:dict][:sorted_datas] = @datas.map{|x| Link.new(x)}
+      @top[:dict][:sorted_datas] = sort_datas(@datas).map{|x| Link.new(x)}
+    end
+
+    # sort datas so that each data comes after the datas it depends on
+    def sort_datas(datas)
+      res = []
+      visited = {}.compare_by_identity
+      visit = proc do |d|
+        next if visited[d]
+        visited[d] = true
+        data_deps(d[:exp]).each{|x| visit.call(x)}
+        res << d
+      end
+      datas.each{|d| visit.call(d)}
+      return res
+    end
+
+    def data_deps(exp, funcs={}.compare_by_identity, acc=[])
+      case exp
+      when VarRef
+        d = exp[:binder].get
+        acc << d if d.is_a?(DataDef) && !acc.any?{|x| x.equal?(d)}
+      when FuncCall
+        f = @top[:dict][:func_space][exp[:name][:desc]].get
+        if f.is_a?(FuncDef) && !funcs[f]
+          funcs[f] = true
+          data_deps(f[:exp], funcs, acc)
+        end
+        data_deps(exp[:args], funcs, acc)
+      when Syntax
+        data_deps(exp.values, funcs, acc)
+      when Array
+        exp.each{|x| data_deps(x, funcs, acc)}
+      end
+      return acc
     end
 
     def monofy_node(node, visited)

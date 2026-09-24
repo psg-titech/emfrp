@@ -1,0 +1,12 @@
+module GCInitValue
+in a : Int
+out x : Int
+use Std
+
+type Wrap = Wrap(Int)
+
+# the initial value of w must survive until it is referred as w@last
+node init[Wrap(100)] w = Wrap(a)
+node b = (Wrap(a), Wrap(1), Wrap(2)) of (Wrap(i), Wrap(j), Wrap(k)) -> Wrap(i + j + k - 3)
+node c = Wrap(a + 2)
+node x = (w@last, b, c) of (Wrap(p), Wrap(q), Wrap(r)) -> p * 10000 + q * 100 + r

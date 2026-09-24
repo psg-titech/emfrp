@@ -1,0 +1,15 @@
+module GCOutput
+in a : Int
+out o : Wrap, r : Int, o2 : Wrap
+use Std
+
+type Wrap = Wrap(Int)
+
+# a boxed output must survive until Output() is called
+node o = Wrap(a)
+node p = o of Wrap(v) -> v
+node q = (Wrap(p + 1000), Wrap(p + 2000)) of (Wrap(i), Wrap(j)) -> i + j
+node r = q + p
+
+# a boxed output which is not referred by other nodes
+node o2 = Wrap(a * 10)

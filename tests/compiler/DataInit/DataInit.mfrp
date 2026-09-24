@@ -1,0 +1,19 @@
+module DataInit
+in a : Int
+out x1 : Int, x2 : Int, acc : Int
+use Std
+
+type Wrap = Wrap(Int)
+
+# datas are initialized in dependency order
+data d2 = 5
+data d1 = d2 + 1
+node x1 = d2 + d1 + a
+
+# data values of boxed types must not be reclaimed by GC
+data w = Wrap(100)
+node t = Wrap(a)
+node x2 = (w, t) of (Wrap(p), Wrap(q)) -> p + q
+
+# datas are initialized before init-exps of nodes
+node init[d1] acc = acc@last + a

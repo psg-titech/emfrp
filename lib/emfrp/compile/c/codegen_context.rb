@@ -30,6 +30,7 @@ module Emfrp
       @global_vars = []
       @funcs = []
       @structs = []
+      @struct_names = []
       @protos = []
       @static_protos = []
       @macros = []
@@ -41,6 +42,10 @@ module Emfrp
       #  generate header-file
       h_output << "#ifndef #{name.upcase}_H\n"
       h_output << "#define #{name.upcase}_H\n\n"
+      @struct_names.each do |x|
+        h_output << "struct #{x};\n"
+      end
+      h_output << "\n" if @struct_names.size > 0
       @protos.each do |x|
         h_output.puts x.to_s
       end
@@ -182,6 +187,7 @@ module Emfrp
       x = Block.new("#{kind_str} #{name_str}{", elements, "}#{var_name_str};")
       if name_str
         @structs << x
+        @struct_names << name_str
         return nil
       else
         return x

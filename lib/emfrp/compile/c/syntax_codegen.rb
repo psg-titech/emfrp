@@ -9,6 +9,10 @@ module Emfrp
         v.get.constructor_gen(ct)
         v.get.marker_gen(ct)
       end
+      # datas are initialized first (in dependency order) since inputs and nodes may refer them
+      self[:dict][:sorted_datas].each do |v|
+        v.get.codegen(ct)
+      end
       self[:inputs].each do |i|
         if i[:init_exp]
           i.init_func_gen(ct)
@@ -25,7 +29,8 @@ module Emfrp
           ct.define_init_stmt "#{node.node_var_name(ct)}[last_side] = #{node.init_func_name(ct)}();"
           t = ct.tdef(node)
           if t.is_a?(TypeDef) && !t.enum?(ct)
-            ct.define_init_stmt "#{t.marker_func_name(ct)}(#{node.node_var_name(ct)}[last_side], #{ar.ref_pos_last(node) + 1});"
+            # the mark must survive the refreshMark() at the end of initialization
+            ct.define_init_stmt "#{t.marker_func_name(ct)}(#{node.node_var_name(ct)}[last_side], NodeSize + 1 + #{ar.ref_pos_last(node)});"
           end
         end
       end
@@ -33,9 +38,6 @@ module Emfrp
         v.get.codegen(ct)
       end
       self[:dict][:used_pfuncs].each do |v|
-        v.get.codegen(ct)
-      end
-      self[:dict][:sorted_datas].reverse.each do |v|
         v.get.codegen(ct)
       end
       memory_gen(ct, ar)
@@ -78,6 +80,10 @@ module Emfrp
         end
         stmts = []
         stmts << "Counter = 1;"
+        # datas live forever: keep them marked through the whole iteration
+        self[:dict][:sorted_datas].each do |v|
+          stmts << v.get.marker_stmt(ct) if v.get.marker_stmt(ct)
+        end
         inputs = self[:inputs].map{|x| "&#{x.node_var_name(ct)}[current_side]"}.join(", ")
         stmts << "Input(#{inputs});"
         self[:dict][:sorted_nodes].each do |n|
@@ -311,13 +317,17 @@ module Emfrp
       t = ct.tref(self)
       ct.define_global_var(t, var_name(ct, self[:name][:desc]))
       ct.define_init_stmt("#{var_name(ct, self[:name][:desc])} = #{init_func_name(ct)}();")
+      ct.define_init_stmt(marker_stmt(ct)) if marker_stmt(ct)
       ct.define_func(t, init_func_name(ct), []) do |x|
         x << "return #{self[:exp].codegen(ct, x)};"
       end
     end
 
-    def var_name(ct)
-      "data_#{self[:name][:desc]}"
+    def marker_stmt(ct)
+      t = ct.tdef(self)
+      if t.is_a?(TypeDef) && !t.enum?(ct)
+        "#{t.marker_func_name(ct)}(#{var_name(ct, self[:name][:desc])}, NodeSize + 1);"
+      end
     end
 
     def init_func_name(ct)
